@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Fun Snake Game</title>
+    
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            position: relative;
+            background: linear-gradient(90deg, #56CCF2, #2F80ED);
+            animation: gradient 15s ease infinite;
+        }
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        h1 {
+            margin: 20px;
+            font-size: 3em;
+            color: #ff4081;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        #startScreen, #gameOver {
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            padding: 20px;
+            margin: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            width: 400px;
+        }
+        #gameArea {
+            display: none;
+            margin: 20px;
+            position: relative;
+            width: 400px;
+            height: 400px;
+            overflow: hidden;
+            border: 5px solid #00ff00; /* Neon green border */
+            border-radius: 15px;
+        }
+        #gameCanvas {
+            background-color: transparent; /* Transparent canvas */
+            display: block;
+            margin: 0 auto;
+        }
+        .controlGroup {
+            margin: 15px 0;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background: #ff4081;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            width: 100%;
+        }
+        button:hover {
+            background-color: #ff60a6;
+            transform: scale(1.05);
+        }
+        #scoreboard {
+            display: none;
+            font-size: 16px;
+            border-radius: 10px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            text-align: center;
+        }
+        #gameOver {
+            display: none;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<div id="startScreen" role="dialog">
+    <h1>Ultimate Snake Game</h1>
+    <div class="controlGroup">
+        <label for="theme">Select Theme:</label>
+        <select id="theme" onchange="changeTheme()">
+            <option value="default">Default</option>
+            <option value="summer">Summer</option>
+            <option value="ocean">Ocean</option>
+            <option value="forest">Forest</option>
+            <option value="desert">Desert</option>
+            <option value="rainforest">Rainforest</option>
+            <option value="candy">Candy</option>
+            <option value="winter">Winter</option>
+            <option value="space">Space</option>
+            <option value="retro">Retro</option>
+            <option value="vintage">Vintage</option>
+            <option value="autumn">Autumn</option>
+            <option value="city">City</option>
+            <option value="neon">Neon</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="pixel">Pixel</option>
+            <option value="lavender">Lavender</option>
+            <option value="halloween">Halloween</option>
+            <option value="newyear">New Year</option>
+            <option value="tropical">Tropical</option>
+        </select>
+    </div>
+    <div class="controlGroup">
+        <label for="snakeColor">Snake Color:</label>
+        <input type="color" id="snakeColor" value="#6ab04c" onchange="updateSnakeColor()">
+    </div>
+    <div class="controlGroup">
+        <label for="initialLength">Snake Length:</label>
+        <select id="initialLength">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+        </select>
+    </div>
+    <div class="controlGroup">
+        <label for="foodCount">Food Count:</label>
+        <select id="foodCount">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+        </select>
+    </div>
+    <div class="controlGroup">
+        <label for="difficulty">Difficulty:</label>
+        <select id="difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+        </select>
+    </div>
+    <button id="startGameButton" aria-pressed="false">Start Game</button>
+</div>
+
+<div id="gameArea">
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+</div>
+
+<div id="scoreboard">
+    <h4 id="score">Score: 0</h4>
+    <h4 id="highScore">High Score: 0</h4>
+    <h4 id="time">Time: <span id="timer">0</span> seconds</h4>
+    <h4 id="statistics">Games Played: <span id="gamesPlayed">0</span></h4>
+</div>
+
+<div id="gameOver" role="dialog">
+    <h2>Game Over</h2>
+    <p>Your score: <span id="finalScore">0</span></p>
+    <div id="leaderboard"></div>
+    <p>Press Enter or click "Restart" to play again</p>
+    <button id="restartButton">Restart</button>
+    <button id="resetHighScoreButton">Reset High Score</button>
+</div>
+
+<audio id="eatSound" src="https://www.soundjay.com/button/sounds/button-3.mp3"></audio>
+<audio id="gameOverSound" src="https://www.soundjay.com/button/sounds/button-11.mp3"></audio>
+<audio id="backgroundMusic" src="https://www.bensound.com/bensound-music/bensound-littleidea.mp3" loop></audio>
+
+<script>
+    let snakeColor = '#6ab04c'; // Default snake color
+    let currentTheme = localStorage.getItem('selectedTheme') || 'default'; // Load theme from local storage
+    let canvas, ctx;
+
+    const box = 20;
+    let snake;
+    let direction;
+    let food = [];
+    let score;
+    let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
+    let gamesPlayed = localStorage.getItem('gamesPlayed') ? parseInt(localStorage.getItem('gamesPlayed')) : 0;
+    let game;
+    let speed = 100;
+    let timerInterval;
+    let timeElapsed = 0;
+
+    const speedSettings = {
+        easy: 150,
+        medium: 100,
+        hard: 50
+    };
+
+    const colorThemes = {
+        default: { background: 'linear-gradient(90deg, #56CCF2, #2F80ED)' },
+        summer: { background: 'linear-gradient(90deg, #F7B733, #FC4A1A)' },
+        ocean: { background: 'linear-gradient(90deg, #00c6ff, #0072ff)' },
+        forest: { background: 'linear-gradient(90deg, #3a6073, #3a92a1)' },
+        desert: { background: 'linear-gradient(90deg, #d1a91f, #cc9933)' },
+        rainforest: { background: 'linear-gradient(90deg, #5f3c3c, #8ed1fc)' },
+        candy: { background: 'linear-gradient(90deg, #FF5F6D, #FFC371)' },
+        winter: { background: 'linear-gradient(90deg, #00d2ff, #928DAB)' },
+        space: { background: 'linear-gradient(90deg, #000428, #004e92)' },
+        retro: { background: 'linear-gradient(90deg, #ffafbd, #ffc3a0)' },
+        vintage: { background: 'linear-gradient(90deg, #D7D2CB, #30336b)' },
+        autumn: { background: 'linear-gradient(90deg, #f39c12, #d35400)' },
+        city: { background: 'linear-gradient(90deg, #74ebd5, #ACB6E5)' },
+        neon: { background: 'linear-gradient(90deg, #f6d365, #fda085)' },
+        light: { background: 'linear-gradient(90deg, #D8BFD8, #EEDC82)' },
+        dark: { background: 'linear-gradient(90deg, #232526, #414345)' },
+        pixel: { background: 'linear-gradient(90deg, #ff9a9e, #fad0c4)' },
+        lavender: { background: 'linear-gradient(90deg, #e0eafc, #cfdef3)' },
+        halloween: { background: 'linear-gradient(90deg, #FF4500, #FFD700)' },
+        newyear: { background: 'linear-gradient(90deg, #ff0099, #493240)' },
+        tropical: { background: 'linear-gradient(90deg, #10E7E7, #FFC3A0)' }
+    };
+
+    function changeTheme() {
+        currentTheme = document.getElementById("theme").value;
+        localStorage.setItem('selectedTheme', currentTheme); // Store the selected theme in local storage
+        const theme = colorThemes[currentTheme];
+        document.body.style.background = theme.background;
+    }
+
+    function updateSnakeColor() {
+        snakeColor = document.getElementById("snakeColor").value;
+    }
+
+    document.getElementById("startGameButton").addEventListener("click", () => {
+        document.getElementById("startScreen").style.display = "none";
+        document.getElementById("backgroundMusic").play(); 
+        startGame();
+    });
+
+    document.getElementById("resetHighScoreButton").addEventListener("click", () => {
+        localStorage.removeItem('highScore');
+        document.getElementById("highScore").innerText = "High Score: 0";
+    });
+
+    function startGame() {
+        canvas = document.getElementById("gameCanvas");
+        ctx = canvas.getContext("2d");
+        resetGame();
+        document.getElementById("gameOver").style.display = "none";
+        document.getElementById("scoreboard").style.display = 'block';
+        document.getElementById("gameArea").style.display = "block";
+        clearInterval(game);
+        game = setInterval(drawGame, speed);
+        timerInterval = setInterval(updateTimer, 1000);
+        document.addEventListener("keydown", changeDirection);
+    }
+    
+    function resetGame() {
+        const initialLength = parseInt(document.getElementById("initialLength").value);
+        snake = [];
+        for(let i = 0; i < initialLength; i++) {
+            snake.push({ x: (9 - i) * box, y: 9 * box });
+        }
+        direction = "RIGHT";
+        score = 0;
+        timeElapsed = 0;
+        food = createFoodArray();
+        updateScore();
+        gamesPlayed++;
+        localStorage.setItem('gamesPlayed', gamesPlayed); // Store games played in local storage
+        changeTheme(); // Change the theme at the start of the game
+    }
+
+    function createFoodArray() {
+        const foodCount = parseInt(document.getElementById("foodCount").value);
+        let foodArray = [];
+        for (let i = 0; i < foodCount; i++) {
+            foodArray.push(createFood());
+        }
+        return foodArray;
+    }
+
+    function createFood() {
+        let foodPosition;
+        do {
+            foodPosition = {
+                x: Math.floor(Math.random() * (canvas.width / box)) * box,
+                y: Math.floor(Math.random() * (canvas.height / box)) * box
+            };
+        } while (collision(foodPosition, snake) || food.some(f => f.x === foodPosition.x && f.y === foodPosition.y));
+
+        return foodPosition;
+    }
+
+    function drawGame() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Draw the snake
+        for (let i = 0; i < snake.length; i++) {
+            ctx.fillStyle = (i === 0) ? snakeColor : 'green'; // The head color
+            ctx.fillRect(snake[i].x, snake[i].y, box, box);
+        }
+        // Draw the food
+        ctx.fillStyle = 'red'; // Neon red for food
+        food.forEach(f => {
+            ctx.fillRect(f.x, f.y, box, box);
+        });
+        // Move the snake
+        let snakeX = snake[0].x;
+        let snakeY = snake[0].y;
+        switch (direction) {
+            case "LEFT":
+                snakeX -= box;
+                break;
+            case "UP":
+                snakeY -= box;
+                break;
+            case "RIGHT":
+                snakeX += box;
+                break;
+            case "DOWN":
+                snakeY += box;
+                break;
+        }
+        const newHead = { x: snakeX, y: snakeY };
+        // Eating food
+        const foodEaten = food.findIndex(f => snakeX === f.x && snakeY === f.y);
+        if (foodEaten !== -1) {
+            score++;
+            food.splice(foodEaten, 1);
+            food.push(createFood());
+            updateScore();
+        } else {
+            snake.pop();  // Remove the last part of the snake
+        }
+        // Game Over conditions
+        if (snakeX < 0 || snakeY < 0 || snakeX >= canvas.width || snakeY >= canvas.height || collision(newHead, snake)) {
+            clearInterval(game);
+            clearInterval(timerInterval); // Stop the timer
+            document.getElementById("gameOverSound").play();
+            gameOver();
+            return;
+        }
+        snake.unshift(newHead); // Add a new head to the snake array
+    }
+
+    function collision(head, array) {
+        return array.some(part => head.x === part.x && head.y === part.y);
+    }
+
+    function gameOver() {
+        document.getElementById("finalScore").innerHTML = score;
+        updateScore();
+        document.getElementById("gameOver").style.display = "block";
+        document.getElementById("backgroundMusic").pause();
+    }
+
+    function updateScore() {
+        document.getElementById("score").innerHTML = "Score: " + score;
+        document.getElementById("highScore").innerHTML = "High Score: " + highScore;
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('highScore', highScore);
+        }
+        document.getElementById("gamesPlayed").innerText = gamesPlayed; // Update games played in the scoreboard
+    }
+
+    function changeDirection(event) {
+        switch (event.keyCode) {
+            case 37: // left arrow
+                if (direction !== "RIGHT") direction = "LEFT";
+                break;
+            case 38: // up arrow
+                if (direction !== "DOWN") direction = "UP";
+                break;
+            case 39: // right arrow
+                if (direction !== "LEFT") direction = "RIGHT";
+                break;
+            case 40: // down arrow
+                if (direction !== "UP") direction = "DOWN";
+                break;
+        }
+    }
+
+    document.getElementById("restartButton").addEventListener("click", restartGame);
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && document.getElementById("gameOver").style.display === "block") {
+            restartGame();
+        }
+    });
+
+    function restartGame() {
+        clearInterval(game);
+        clearInterval(timerInterval); 
+        document.getElementById("gameOver").style.display = "none";
+        document.getElementById("scoreboard").style.display = "none";
+        resetGame();
+        startGame();
+    }
+
+    function updateTimer() {
+        timeElapsed++;
+        document.getElementById("timer").innerText = timeElapsed;
+    }
+
+    // Initialize the game state
+    changeTheme(); // Set the background theme
+    updateScore(); // Update display with current scores and statistics
+</script>
+
+</body>
+</html>
